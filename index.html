@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NabilaAssistant</title>
+<style>
+body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+h1 { color: #333; }
+input, textarea, select { width: 100%; margin-bottom: 10px; padding: 8px; }
+button { padding: 10px 20px; margin-bottom: 10px; background: #007BFF; color: white; border: none; cursor: pointer; }
+button:hover { background: #0056b3; }
+.note, .task { background: white; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+.deleteBtn { background: red; color: white; border: none; padding: 5px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<h1>NabilaAssistant</h1>
+
+<h2>Add a Note</h2>
+<select id="subject">
+  <option value="Math">Math</option>
+  <option value="Science">Science</option>
+  <option value="Language">Language</option>
+</select>
+<textarea id="noteInput" placeholder="Write your note here..."></textarea>
+<button onclick="addNote()">Save Note</button>
+
+<h3>Notes List</h3>
+<div id="notes"></div>
+
+<hr>
+
+<h2>Add a Task</h2>
+<input type="text" id="taskInput" placeholder="Write your task here...">
+<input type="time" id="taskTime">
+<button onclick="addTask()">Save Task</button>
+
+<h3>Tasks List</h3>
+<div id="tasks"></div>
+
+<script>
+// ==== Notes ====
+function addNote() {
+    const input = document.getElementById('noteInput');
+    const subject = document.getElementById('subject').value;
+    if(input.value.trim() !== "") {
+        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        notes.push({text: input.value, subject: subject});
+        localStorage.setItem('notes', JSON.stringify(notes));
+        input.value = '';
+        showNotes();
+    }
+}
+
+function deleteNote(index) {
+    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    notes.splice(index,1);
+    localStorage.setItem('notes', JSON.stringify(notes));
+    showNotes();
+}
+
+function showNotes() {
+    const notesDiv = document.getElementById('notes');
+    notesDiv.innerHTML = '';
+    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    notes.forEach((note, index) => {
+        const div = document.createElement('div');
+        div.className = 'note';
+        div.innerHTML = `<span>[${note.subject}] ${note.text}</span> <button class="deleteBtn" onclick="deleteNote(${index})">Delete</button>`;
+        notesDiv.appendChild(div);
+    });
+}
+showNotes();
+
+// ==== Tasks ====
+function addTask() {
+    const taskInput = document.getElementById('taskInput');
+    const taskTime = document.getElementById('taskTime');
+    if(taskInput.value.trim() !== "" && taskTime.value !== "") {
+        const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        tasks.push({text: taskInput.value, time: taskTime.value});
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        taskInput.value = '';
+        taskTime.value = '';
+        showTasks();
+    }
+}
+
+function deleteTask(index) {
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    tasks.splice(index,1);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    showTasks();
+}
+
+function showTasks() {
+    const tasksDiv = document.getElementById('tasks');
+    tasksDiv.innerHTML = '';
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    tasks.forEach((task, index) => {
+        const div = document.createElement('div');
+        div.className = 'task';
+        div.innerHTML = `<span>${task.time} - ${task.text}</span> <button class="deleteBtn" onclick="deleteTask(${index})">Delete</button>`;
+        tasksDiv.appendChild(div);
+    });
+}
+showTasks();
+
+// ==== Notifications ====
+setInterval(() => {
+    const now = new Date();
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    tasks.forEach(task => {
+        const [hours, minutes] = task.time.split(':');
+        if(now.getHours() == hours && now.getMinutes() == minutes && !task.notified){
+            alert(`Reminder: Task "${task.text}" is due now!`);
+            task.notified = true;
+        }
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}, 60000);
+</script>
+
+</body>
+</html>
